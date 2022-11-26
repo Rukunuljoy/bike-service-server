@@ -16,7 +16,8 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
     try{
         const bikeCollection = client.db('royalEnfield').collection('royalBikes')
-        const suzukiCollection = client.db('suzuki').collection('suzukiBikes')
+        const suzukiCollection = client.db('suzuki').collection('suzukiBike')
+        const yamahaCollection = client.db('yamaha').collection('yamahaBike')
 
 
         app.get('/royalBikes',async(req,res)=>{
@@ -33,19 +34,34 @@ async function run(){
             res.send(royal)
         })
 
-        
-        app.get('/suzukiBikes',async(req,res)=>{
+
+        app.get('/suzukiBike',async(req,res)=>{
             const query = {}
             const cursor = suzukiCollection.find(query)
             const suzukiBikes = await cursor.toArray();
             res.send(suzukiBikes);
         })
         
-        app.get('/suzukiBikes/:id',async(req,res)=>{
+        app.get('/suzukiBike/:id',async(req,res)=>{
             const id = req.params.id;
             const query = {_id:ObjectId(id)};
             const suzuki = await suzukiCollection.findOne(query);
             res.send(suzuki)
+        })
+
+
+        app.get('/yamahaBike',async(req,res)=>{
+            const query = {}
+            const cursor = yamahaCollection.find(query)
+            const yamahaBike = await cursor.toArray();
+            res.send(yamahaBike);
+        })
+        
+        app.get('/yamahaBike/:id',async(req,res)=>{
+            const id = req.params.id;
+            const query = {_id:ObjectId(id)};
+            const yamaha = await yamahaCollection.findOne(query);
+            res.send(yamaha)
         })
 
 
