@@ -26,6 +26,12 @@ async function run(){
             const royalBikes = await cursor.toArray();
             res.send(royalBikes);
         })
+
+        // app.post('/royalEnfield',async(req,res)=>{
+        //     const royal = req.body;
+        //     const result = await bikeCollection.insertOne(royal)
+        //     res.send(result)
+        // })
         
         app.get('/royalBikes/:id',async(req,res)=>{
             const id = req.params.id;
