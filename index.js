@@ -9,7 +9,7 @@ const {
   CURSOR_FLAGS,
   ObjectId,
 } = require("mongodb");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 
@@ -42,17 +42,23 @@ function verifyJWT(req, res, next) {
 
 async function run() {
   try {
-    const bikeCollection = client.db("royalEnfield").collection("royalBikes");
-    const bookingsCollection = client.db("bikeSeller").collection("bookings");
-    const usersCollection = client.db("bikeSeller").collection("users");
-    const suzukiCollection = client.db("suzuki").collection("suzukiBike");
-    const yamahaCollection = client.db("yamaha").collection("yamahaBike");
+    const bikeCollection = client.db("bikes").collection("royalBikes");
+    const bookingsCollection = client.db("bikes").collection("bookings");
+    const usersCollection = client.db("bikes").collection("users");
+    const suzukiCollection = client.db("bikes").collection("suzukiBike");
+    const yamahaCollection = client.db("bikes").collection("yamahaBike");
 
     app.get("/royalBikes", async (req, res) => {
       const query = {};
       const result = await bikeCollection.find(query).toArray();
       res.send(result);
     });
+    app.get('/myRoyal', async (req, res) => {
+      const sellerName = req.query.sellerName;
+      const query = { sellerName: sellerName };
+      const result = await mercedesCollection.find(query).toArray();
+      res.send(result);
+  });
 
     app.post("/royalBikes", async (req, res) => {
       const data = req.body;
@@ -72,6 +78,13 @@ async function run() {
       const result = await suzukiCollection.find(query).toArray();
       res.send(result);
     });
+    app.get('/mySuzuki', async (req, res) => {
+      const sellerName = req.query.sellerName;
+      const query = { sellerName: sellerName };
+      const result = await audiCollection.find(query).toArray();
+      res.send(result);
+  });
+
 
     app.post("/suzukiBike", async (req, res) => {
       const data = req.body;
@@ -91,6 +104,12 @@ async function run() {
       const result = await yamahaCollection.find(query).toArray();
       res.send(result);
     });
+    app.get('/myYamaha', async (req, res) => {
+      const sellerName = req.query.sellerName;
+      const query = { sellerName: sellerName };
+      const result = await hondaCollection.find(query).toArray();
+      res.send(result);
+  });
 
     app.post("/yamahaBike", async (req, res) => {
       const data = req.body;
@@ -143,20 +162,20 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/create-payment-intent", async (req, res) => {
-      const booking = req.body;
-      const price = booking.price;
-      const amount = price * 100;
+    // app.post("/create-payment-intent", async (req, res) => {
+    //   const booking = req.body;
+    //   const price = booking.price;
+    //   const amount = price * 100;
 
-      const paymentIntent = await stripe.paymentIntents.create({
-        currency: "usd",
-        amount: amount,
-        payment_method_types: ["card"],
-      });
-      res.send({
-        clientSecret: paymentIntent.client_secret,
-      });
-    });
+    //   const paymentIntent = await stripe.paymentIntents.create({
+    //     currency: "usd",
+    //     amount: amount,
+    //     payment_method_types: ["card"],
+    //   });
+    //   res.send({
+    //     clientSecret: paymentIntent.client_secret,
+    //   });
+    // });
 
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -184,29 +203,29 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users/admin/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { email };
-      const user = await usersCollection.findOne(query);
-      res.send({ isAdmin: user?.role === "admin" });
-    });
+    // app.get("/users/admin/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const query = { email };
+    //   const user = await usersCollection.findOne(query);
+    //   res.send({ isAdmin: user?.role === "admin" });
+    // });
 
-    app.put("/users/admin/:id", verifyJWT, verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: {
-          role: "admin",
-        },
-      };
-      const result = await usersCollection.updateOne(
-        filter,
-        updateDoc,
-        options
-      );
-      res.send(result);
-    });
+    // app.put("/users/admin/:id", verifyJWT, verifyAdmin, async (req, res) => {
+    //   const id = req.params.id;
+    //   const filter = { _id: ObjectId(id) };
+    //   const options = { upsert: true };
+    //   const updateDoc = {
+    //     $set: {
+    //       role: "admin",
+    //     },
+    //   };
+    //   const result = await usersCollection.updateOne(
+    //     filter,
+    //     updateDoc,
+    //     options
+    //   );
+    //   res.send(result);
+    // });
 
     app.get("/user", async (req, res) => {
       const role = req.query.role;
