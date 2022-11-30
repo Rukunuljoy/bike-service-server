@@ -56,7 +56,7 @@ async function run() {
     app.get('/myRoyal', async (req, res) => {
       const sellerName = req.query.sellerName;
       const query = { sellerName: sellerName };
-      const result = await mercedesCollection.find(query).toArray();
+      const result = await bikeCollection.find(query).toArray();
       res.send(result);
   });
 
@@ -81,7 +81,7 @@ async function run() {
     app.get('/mySuzuki', async (req, res) => {
       const sellerName = req.query.sellerName;
       const query = { sellerName: sellerName };
-      const result = await audiCollection.find(query).toArray();
+      const result = await suzukiCollection.find(query).toArray();
       res.send(result);
   });
 
@@ -107,7 +107,7 @@ async function run() {
     app.get('/myYamaha', async (req, res) => {
       const sellerName = req.query.sellerName;
       const query = { sellerName: sellerName };
-      const result = await hondaCollection.find(query).toArray();
+      const result = await yamahaCollection.find(query).toArray();
       res.send(result);
   });
 
@@ -124,58 +124,73 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/bookings", async (req, res) => {
+    app.post('/bookings', async (req, res) => {
       const booking = req.body;
       console.log(booking);
-      const query = {
-        BookingDate: booking.dates,
-        email: booking.email,
-      };
-
-      const alreadyBooked = await bookingsCollection.find(query).toArray();
-
-      if (alreadyBooked.length) {
-        const message = `You already have a booking on ${booking.BookingDate}`;
-        return res.send({ acknowledged: false, message });
-      }
       const result = await bookingsCollection.insertOne(booking);
       res.send(result);
-    });
+  });
 
-    app.get("/bookings/:id", async (req, res) => {
+  app.get('/bookings/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const booking = await bookingsCollection.findOne(query);
       res.send(booking);
-    });
 
-    app.get("/bookings", verifyJWT, async (req, res) => {
+  });
+
+  app.get('/booked', async (req, res) => {
+      const query = {};
+      const result = await bookingsCollection.find(query).toArray();
+      res.send(result);
+
+  });
+
+  app.get('/bookings', verifyJWT, async (req, res) => {
       const email = req.query.email;
       const decodedEmail = req.decoded.email;
 
       if (email !== decodedEmail) {
-        return res.status(403).send({ message: "forbidden access" });
+          return res.status(403).send({ message: 'forbidden access' });
       }
 
       const query = { email: email };
       const result = await bookingsCollection.find(query).toArray();
       res.send(result);
+  });
+
+  app.post('/create-payment-intent', async (req, res) => {
+    const booking = req.body;
+    const currentPrice = parseInt(booking.currentPrice);
+    const amount = currentPrice * 100;
+
+    const paymentIntent = await stripe.paymentIntents.create({
+        currency: 'usd',
+        amount: amount,
+        "payment_method_types": [
+            "card"
+        ]
     });
+    res.send({
+        clientSecret: paymentIntent.client_secret,
+    });
+});
 
-    // app.post("/create-payment-intent", async (req, res) => {
-    //   const booking = req.body;
-    //   const price = booking.price;
-    //   const amount = price * 100;
 
-    //   const paymentIntent = await stripe.paymentIntents.create({
-    //     currency: "usd",
-    //     amount: amount,
-    //     payment_method_types: ["card"],
-    //   });
-    //   res.send({
-    //     clientSecret: paymentIntent.client_secret,
-    //   });
-    // });
+app.post('/payments', async (req, res) => {
+    const payment = req.body;
+    const result = await paymentsCollection.insertOne(payment);
+    const _id = payment.bookingId;
+    const filter = { _id: ObjectId(_id) };
+    const updatedDoc = {
+        $set: {
+            paid: true,
+            transactionId: payment.transactionId
+        }
+    }
+    const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc)
+    res.send(result);
+});
 
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -190,55 +205,38 @@ async function run() {
       res.status(403).send({ accessToken: "" });
     });
 
-    app.post("/users", async (req, res) => {
+    app.post('/users', async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result);
-    });
+  });
 
-    app.get("/users", async (req, res) => {
+  app.get('/users', async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
       const result = await usersCollection.find(query).toArray();
       res.send(result);
-    });
+  });
 
-    // app.get("/users/admin/:email", async (req, res) => {
-    //   const email = req.params.email;
-    //   const query = { email };
-    //   const user = await usersCollection.findOne(query);
-    //   res.send({ isAdmin: user?.role === "admin" });
-    // });
-
-    // app.put("/users/admin/:id", verifyJWT, verifyAdmin, async (req, res) => {
-    //   const id = req.params.id;
-    //   const filter = { _id: ObjectId(id) };
-    //   const options = { upsert: true };
-    //   const updateDoc = {
-    //     $set: {
-    //       role: "admin",
-    //     },
-    //   };
-    //   const result = await usersCollection.updateOne(
-    //     filter,
-    //     updateDoc,
-    //     options
-    //   );
-    //   res.send(result);
-    // });
-
-    app.get("/user", async (req, res) => {
+  app.get('/user', async (req, res) => {
       const role = req.query.role;
       const query = { role: role };
       const result = await usersCollection.find(query).toArray();
       res.send(result);
-    });
+  });
 
-    app.get("/allUsers", async (req, res) => {
+  app.get('/allusers', async (req, res) => {
       const query = {};
       const result = await usersCollection.find(query).toArray();
       res.send(result);
-    });
+  });
+
+  app.delete('/allUsers/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
+  })
   } finally {
   }
 }
