@@ -47,7 +47,7 @@ async function run() {
     const usersCollection = client.db("bikes").collection("users");
     const suzukiCollection = client.db("bikes").collection("suzukiBike");
     const yamahaCollection = client.db("bikes").collection("yamahaBike");
-    const paymentsCollection = client.db('autoBuzz').collection('payments');
+    const paymentsCollection = client.db("bikes").collection('payments');
 
     app.get("/royalBikes", async (req, res) => {
       const query = {};
@@ -190,6 +190,7 @@ app.post('/payments', async (req, res) => {
         }
     }
     const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc)
+    console.log(updatedResult)
     res.send(result);
 });
 
