@@ -47,6 +47,7 @@ async function run() {
     const usersCollection = client.db("bikes").collection("users");
     const suzukiCollection = client.db("bikes").collection("suzukiBike");
     const yamahaCollection = client.db("bikes").collection("yamahaBike");
+    const paymentsCollection = client.db('autoBuzz').collection('payments');
 
     app.get("/royalBikes", async (req, res) => {
       const query = {};
